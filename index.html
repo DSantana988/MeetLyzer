@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meetlyzer - Sistema de Gestión de Reuniones</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3);
+        }
+        
+        .form-input {
+            transition: all 0.3s ease;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .form-input:focus {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+        
+        .priority-high {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .priority-medium {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+        
+        .priority-low {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        }
+        
+        .meeting-card {
+            transition: all 0.3s ease;
+        }
+        
+        .meeting-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        @media print {
+            body {
+                background: white !important;
+            }
+            .glass-effect {
+                background: white !important;
+                backdrop-filter: none !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="glass-effect rounded-2xl p-8 mb-6 shadow-2xl">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-users text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold gradient-text">Meetlyzer</h1>
+                        <p class="text-gray-600 font-medium">Sistema Profesional de Gestión de Reuniones</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-500">Reunión No.:</div>
+                    <div id="meetingNumber" class="text-2xl font-bold text-blue-600">#0001</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <div class="glass-effect rounded-2xl p-8 shadow-2xl">
+            <form id="meetingForm">
+                <!-- Información General -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-info-circle text-blue-600 mr-3"></i>
+                        Información General de la Reunión
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                        <div class="lg:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Título/Asunto de la Reunión</label>
+                            <input type="text" id="meetingTitle" placeholder="Ej: Revisión Mensual de Proyectos Q4" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Reunión</label>
+                            <select id="meetingType" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="estrategica">Estratégica</option>
+                                <option value="operativa">Operativa</option>
+                                <option value="seguimiento">Seguimiento</option>
+                                <option value="planificacion">Planificación</option>
+                                <option value="revision">Revisión</option>
+                                <option value="brainstorming">Brainstorming</option>
+                                <option value="capacitacion">Capacitación</option>
+                                <option value="presentacion">Presentación</option>
+                                <option value="comite">Comité</option>
+                                <option value="directorio">Directorio</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de la Reunión</label>
+                            <input type="date" id="meetingDate" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Hora de Inicio</label>
+                            <input type="time" id="startTime" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Hora de Fin</label>
+                            <input type="time" id="endTime" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Modalidad</label>
+                            <select id="modality" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                                <option value="presencial">Presencial</option>
+                                <option value="virtual">Virtual</option>
+                                <option value="hibrida">Híbrida</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Lugar/Plataforma</label>
+                            <input type="text" id="location" placeholder="Ej: Sala de Juntas A / Zoom / Teams" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Organizador/Moderador</label>
+                            <input type="text" id="organizer" placeholder="Nombre del organizador" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Participantes -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-user-friends text-green-600 mr-3"></i>
+                        Participantes y Asistencia
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Asistentes Confirmados</label>
+                            <textarea id="attendees" rows="4" placeholder="• Juan Pérez - Director General&#10;• María González - Jefa de Proyectos&#10;• Carlos Ruiz - Analista Senior" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Ausentes Justificados</label>
+                            <textarea id="absentees" rows="4" placeholder="• Ana López - Vacaciones&#10;• Pedro Martín - Viaje de negocios" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Invitados Externos</label>
+                            <textarea id="externalGuests" rows="3" placeholder="• Consultor ABC - asesor@consultora.com&#10;• Cliente XYZ - contacto@cliente.com" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Total de Participantes</label>
+                            <input type="number" id="totalParticipants" min="1" placeholder="8" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contenido de la Reunión -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-clipboard-list text-purple-600 mr-3"></i>
+                        Contenido y Desarrollo
+                    </h2>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Objetivos de la Reunión</label>
+                        <textarea id="objectives" rows="3" placeholder="• Revisar el progreso del Q4&#10;• Definir estrategia para el próximo trimestre&#10;• Aprobar presupuesto 2024" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Agenda/Puntos Tratados</label>
+                        <textarea id="agenda" rows="5" placeholder="1. Bienvenida y introducción (10 min)&#10;2. Revisión de proyectos actuales (30 min)&#10;3. Análisis de resultados Q4 (20 min)&#10;4. Planificación Q1 2024 (25 min)&#10;5. Otros temas y cierre (10 min)" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Decisiones Tomadas</label>
+                            <textarea id="decisions" rows="4" placeholder="• Aprobado presupuesto adicional para Proyecto Alpha&#10;• Se posterga lanzamiento del Producto B hasta marzo&#10;• Contratación de 2 desarrolladores adicionales" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Acuerdos Alcanzados</label>
+                            <textarea id="agreements" rows="4" placeholder="• Reuniones de seguimiento semanales los lunes&#10;• Reportes de progreso cada viernes&#10;• Revisión mensual de KPIs" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tareas y Seguimiento -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-tasks text-orange-600 mr-3"></i>
+                        Tareas y Seguimiento
+                    </h2>
+                    
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Acciones Asignadas</label>
+                        <textarea id="assignedTasks" rows="6" placeholder="• María González - Preparar documento de requisitos | Fecha límite: 15/12/2023 | Prioridad: Alta&#10;• Carlos Ruiz - Analizar costos del nuevo sistema | Fecha límite: 20/12/2023 | Prioridad: Media&#10;• Juan Pérez - Coordinar reunión con proveedores | Fecha límite: 18/12/2023 | Prioridad: Alta" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Puntos Pendientes</label>
+                            <textarea id="pendingItems" rows="4" placeholder="• Definir métricas de éxito para Q1&#10;• Revisar contratos con proveedores actuales&#10;• Validar disponibilidad de recursos técnicos" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Próxima Reunión</label>
+                            <div class="space-y-3">
+                                <input type="date" id="nextMeetingDate" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                                <input type="text" id="nextMeetingTopic" placeholder="Tema de la próxima reunión" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recursos y Documentos -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-folder-open text-indigo-600 mr-3"></i>
+                        Recursos y Documentación
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Documentos Compartidos</label>
+                            <textarea id="sharedDocuments" rows="4" placeholder="• Presentación Q4 Results.pptx&#10;• Budget_2024_Draft.xlsx&#10;• Project_Alpha_Timeline.pdf&#10;• Market_Analysis_Report.docx" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Enlaces de Referencia</label>
+                            <textarea id="referenceLinks" rows="4" placeholder="• Dashboard de proyectos: https://dashboard.empresa.com&#10;• Repositorio de documentos: https://docs.empresa.com&#10;• Sistema de tickets: https://tickets.empresa.com" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notas y Observaciones -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-sticky-note text-yellow-600 mr-3"></i>
+                        Notas y Observaciones
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Notas Adicionales</label>
+                            <textarea id="additionalNotes" rows="5" placeholder="• Excelente participación del equipo&#10;• Se identificaron nuevas oportunidades de mejora&#10;• Necesario reforzar comunicación interdepartamental&#10;• Cliente mostró satisfacción con los avances" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones del Moderador</label>
+                            <textarea id="moderatorNotes" rows="5" placeholder="• Reunión muy productiva y enfocada&#10;• Todos los puntos de agenda fueron cubiertos&#10;• Se superaron las expectativas de participación&#10;• Recomendación: mantener este formato para futuras reuniones" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Redactor -->
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-user-edit text-teal-600 mr-3"></i>
+                        Información del Redactor
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Secretario/Redactor</label>
+                            <input type="text" id="secretary" placeholder="Nombre del redactor" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Departamento/Área</label>
+                            <input type="text" id="department" placeholder="Ej: Administración, RRHH, IT" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email de Contacto</label>
+                            <input type="email" id="secretaryEmail" placeholder="secretario@empresa.com" class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones de Acción -->
+                <div class="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200">
+                    <button type="button" id="previewBtn" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-eye mr-2"></i>
+                        Vista Previa
+                    </button>
+                    
+                    <button type="button" id="saveBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-all duration-300 flex items-center justify-center">
+                        <i class="fas fa-save mr-2"></i>
+                        Guardar Borrador
+                    </button>
+                    
+                    <button type="button" id="generateBtn" class="flex-1 btn-primary text-white font-semibold py-4 px-6 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-file-pdf mr-2"></i>
+                        Finalizar y Generar PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Vista Previa -->
+    <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-5xl max-h-96 overflow-y-auto p-8 w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Vista Previa del Informe de Reunión</h2>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="previewContent" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        let meetingCounter = parseInt(localStorage.getItem('meetingCounter')) || 0;
+        
+        // Inicializar número de reunión
+        function updateMeetingNumber() {
+            const nextMeeting = String(meetingCounter + 1).padStart(4, '0');
+            document.getElementById('meetingNumber').textContent = `#${nextMeeting}`;
+        }
+        
+        // Establecer fecha actual por defecto
+        function setDefaultDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('meetingDate').value = today;
+        }
+        
+        // Generar nombre de archivo
+        function generateFileName() {
+            meetingCounter++;
+            localStorage.setItem('meetingCounter', meetingCounter);
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const meetingNum = String(meetingCounter).padStart(4, '0');
+            
+            return `Meetlyzer_${year}${month}${day}_${hours}${minutes}${seconds}_REU${meetingNum}`;
+        }
+        
+        // Generar PDF
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Configuración
+            const margin = 20;
+            const lineHeight = 6;
+            let yPos = margin;
+            
+            // Header
+            doc.setFontSize(20);
+            doc.setTextColor(14, 165, 233);
+            doc.text('INFORME DE REUNIÓN', margin, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Meetlyzer Pro - Sistema de Gestión de Reuniones', margin, yPos);
+            yPos += 10;
+            
+            // Información del caso
+            const meetingNum = document.getElementById('meetingNumber').textContent;
+            doc.setFontSize(14);
+            doc.text(`Reunión: ${meetingNum}`, margin, yPos);
+            
+            const now = new Date().toLocaleString('es-ES');
+            doc.text(`Generado: ${now}`, 120, yPos);
+            yPos += 15;
+            
+            // Línea separadora
+            doc.setLineWidth(0.5);
+            doc.line(margin, yPos, 190, yPos);
+            yPos += 10;
+            
+            // Función para agregar sección
+            function addSection(title, content, addSpace = true) {
+                if (yPos > 250) {
+                    doc.addPage();
+                    yPos = margin;
+                }
+                
+                doc.setFontSize(14);
+                doc.setTextColor(14, 165, 233);
+                doc.text(title, margin, yPos);
+                yPos += 8;
+                
+                doc.setFontSize(10);
+                doc.setTextColor(0, 0, 0);
+                
+                if (Array.isArray(content)) {
+                    content.forEach(item => {
+                        if (yPos > 280) {
+                            doc.addPage();
+                            yPos = margin;
+                        }
+                        
+                        const lines = doc.splitTextToSize(item, 170);
+                        lines.forEach(line => {
+                            doc.text(line, margin, yPos);
+                            yPos += lineHeight;
+                        });
+                    });
+                } else {
+                    const lines = doc.splitTextToSize(content, 170);
+                    lines.forEach(line => {
+                        if (yPos > 280) {
+                            doc.addPage();
+                            yPos = margin;
+                        }
+                        doc.text(line, margin, yPos);
+                        yPos += lineHeight;
+                    });
+                }
+                if (addSpace) yPos += 8;
+            }
+            
+            // Recopilar datos del formulario
+            const formData = {
+                meetingTitle: document.getElementById('meetingTitle').value,
+                meetingType: document.getElementById('meetingType').value,
+                meetingDate: document.getElementById('meetingDate').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                modality: document.getElementById('modality').value,
+                location: document.getElementById('location').value,
+                organizer: document.getElementById('organizer').value,
+                attendees: document.getElementById('attendees').value,
+                absentees: document.getElementById('absentees').value,
+                externalGuests: document.getElementById('externalGuests').value,
+                totalParticipants: document.getElementById('totalParticipants').value,
+                objectives: document.getElementById('objectives').value,
+                agenda: document.getElementById('agenda').value,
+                decisions: document.getElementById('decisions').value,
+                agreements: document.getElementById('agreements').value,
+                assignedTasks: document.getElementById('assignedTasks').value,
+                pendingItems: document.getElementById('pendingItems').value,
+                nextMeetingDate: document.getElementById('nextMeetingDate').value,
+                nextMeetingTopic: document.getElementById('nextMeetingTopic').value,
+                sharedDocuments: document.getElementById('sharedDocuments').value,
+                referenceLinks: document.getElementById('referenceLinks').value,
+                additionalNotes: document.getElementById('additionalNotes').value,
+                moderatorNotes: document.getElementById('moderatorNotes').value,
+                secretary: document.getElementById('secretary').value,
+                department: document.getElementById('department').value,
+                secretaryEmail: document.getElementById('secretaryEmail').value
+            };
+            
+            // Agregar secciones al PDF
+            addSection('INFORMACIÓN GENERAL', [
+                `Título: ${formData.meetingTitle || 'No especificado'}`,
+                `Tipo de Reunión: ${formData.meetingType || 'No especificado'}`,
+                `Fecha: ${formData.meetingDate ? new Date(formData.meetingDate).toLocaleDateString('es-ES') : 'No especificada'}`,
+                `Horario: ${formData.startTime || 'N/A'} - ${formData.endTime || 'N/A'}`,
+                `Modalidad: ${formData.modality || 'No especificada'}`,
+                `Lugar/Plataforma: ${formData.location || 'No especificado'}`,
+                `Organizador: ${formData.organizer || 'No especificado'}`
+            ]);
+            
+            addSection('PARTICIPANTES', [
+                `Total de Participantes: ${formData.totalParticipants || 'No especificado'}`,
+                `Asistentes Confirmados:\n${formData.attendees || 'No especificados'}`,
+                `Ausentes Justificados:\n${formData.absentees || 'Ninguno'}`,
+                `Invitados Externos:\n${formData.externalGuests || 'Ninguno'}`
+            ]);
+            
+            addSection('CONTENIDO Y DESARROLLO', [
+                `Objetivos de la Reunión:\n${formData.objectives || 'No especificados'}`,
+                `Agenda/Puntos Tratados:\n${formData.agenda || 'No especificada'}`,
+                `Decisiones Tomadas:\n${formData.decisions || 'Ninguna'}`,
+                `Acuerdos Alcanzados:\n${formData.agreements || 'Ninguno'}`
+            ]);
+            
+            addSection('TAREAS Y SEGUIMIENTO', [
+                `Acciones Asignadas:\n${formData.assignedTasks || 'Ninguna'}`,
+                `Puntos Pendientes:\n${formData.pendingItems || 'Ninguno'}`,
+                `Próxima Reunión: ${formData.nextMeetingDate ? new Date(formData.nextMeetingDate).toLocaleDateString('es-ES') : 'No programada'}`,
+                `Tema Próxima Reunión: ${formData.nextMeetingTopic || 'No definido'}`
+            ]);
+            
+            if (formData.sharedDocuments || formData.referenceLinks) {
+                addSection('RECURSOS Y DOCUMENTACIÓN', [
+                    `Documentos Compartidos:\n${formData.sharedDocuments || 'Ninguno'}`,
+                    `Enlaces de Referencia:\n${formData.referenceLinks || 'Ninguno'}`
+                ]);
+            }
+            
+            if (formData.additionalNotes || formData.moderatorNotes) {
+                addSection('NOTAS Y OBSERVACIONES', [
+                    `Notas Adicionales:\n${formData.additionalNotes || 'Ninguna'}`,
+                    `Observaciones del Moderador:\n${formData.moderatorNotes || 'Ninguna'}`
+                ]);
+            }
+            
+            addSection('INFORMACIÓN DEL REDACTOR', [
+                `Secretario/Redactor: ${formData.secretary || 'No especificado'}`,
+                `Departamento: ${formData.department || 'No especificado'}`,
+                `Email de Contacto: ${formData.secretaryEmail || 'No especificado'}`
+            ], false);
+            
+            // Footer en todas las páginas
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(128, 128, 128);
+                doc.text(`Meetlyzer Pro - Página ${i} de ${pageCount}`, margin, 285);
+                doc.text('Documento Confidencial - Uso Interno', 120, 285);
+            }
+            
+            // Descargar PDF
+            const fileName = generateFileName();
+            doc.save(`${fileName}.pdf`);
+            
+            // Mostrar confirmación
+            alert(`Informe de reunión generado exitosamente: ${fileName}.pdf`);
+            
+            // Limpiar formulario si se desea
+            if (confirm('¿Desea limpiar el formulario para una nueva reunión?')) {
+                document.getElementById('meetingForm').reset();
+                setDefaultDate();
+                updateMeetingNumber();
+            }
+        }
+        
+        // Vista previa
+        function showPreview() {
+            const previewContent = document.getElementById('previewContent');
+            
+            // Construir vista previa
+            let html = '<div class="space-y-6">';
+            
+            html += `<div class="border-b pb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Información General</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div><strong>Título:</strong> ${document.getElementById('meetingTitle').value || 'No especificado'}</div>
+                    <div><strong>Tipo:</strong> ${document.getElementById('meetingType').value || 'No especificado'}</div>
+                    <div><strong>Fecha:</strong> ${document.getElementById('meetingDate').value ? new Date(document.getElementById('meetingDate').value).toLocaleDateString('es-ES') : 'No especificada'}</div>
+                    <div><strong>Modalidad:</strong> ${document.getElementById('modality').value || 'No especificada'}</div>
+                    <div><strong>Organizador:</strong> ${document.getElementById('organizer').value || 'No especificado'}</div>
+                    <div><strong>Participantes:</strong> ${document.getElementById('totalParticipants').value || 'No especificado'}</div>
+                </div>
+            </div>`;
+            
+            html += `<div class="border-b pb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Objetivos y Agenda</h3>
+                <div class="text-sm space-y-2">
+                    <div><strong>Objetivos:</strong><br>${(document.getElementById('objectives').value || 'No especificados').replace(/\n/g, '<br>')}</div>
+                    <div><strong>Agenda:</strong><br>${(document.getElementById('agenda').value || 'No especificada').replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>`;
+            
+            html += `<div class="border-b pb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Decisiones y Acuerdos</h3>
+                <div class="text-sm space-y-2">
+                    <div><strong>Decisiones:</strong><br>${(document.getElementById('decisions').value || 'Ninguna').replace(/\n/g, '<br>')}</div>
+                    <div><strong>Acuerdos:</strong><br>${(document.getElementById('agreements').value || 'Ninguno').replace(/\n/g, '<br>')}</div>
+                </div>
+            </div>`;
+            
+            html += `<div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Secretario</h3>
+                <div class="text-sm">
+                    <strong>${document.getElementById('secretary').value || 'No especificado'}</strong> - 
+                    ${document.getElementById('department').value || 'Departamento no especificado'}
+                </div>
+            </div>`;
+            
+            html += '</div>';
+            
+            previewContent.innerHTML = html;
+            document.getElementById('previewModal').classList.remove('hidden');
+            document.getElementById('previewModal').classList.add('flex');
+        }
+        
+        // Event Listeners
+        document.getElementById('generateBtn').addEventListener('click', function() {
+            if (confirm('¿Está seguro de que desea finalizar y generar el informe PDF?')) {
+                generatePDF();
+            }
+        });
+        
+        document.getElementById('previewBtn').addEventListener('click', showPreview);
+        
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('previewModal').classList.add('hidden');
+            document.getElementById('previewModal').classList.remove('flex');
+        });
+        
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            const formData = {};
+            const inputs = document.querySelectorAll('#meetingForm input, #meetingForm select, #meetingForm textarea');
+            inputs.forEach(input => {
+                formData[input.id] = input.value;
+            });
+            
+            localStorage.setItem('meetingDraft', JSON.stringify(formData));
+            alert('Borrador de reunión guardado exitosamente');
+        });
+        
+        // Cargar borrador si existe
+        function loadDraft() {
+            const draft = localStorage.getItem('meetingDraft');
+            if (draft && confirm('Se encontró un borrador guardado. ¿Desea cargarlo?')) {
+                const data = JSON.parse(draft);
+                Object.keys(data).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        element.value = data[key];
+                    }
+                });
+            }
+        }
+        
+        // Cerrar modal con Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('previewModal').classList.add('hidden');
+                document.getElementById('previewModal').classList.remove('flex');
+            }
+        });
+        
+        // Calcular duración automáticamente
+        function calculateDuration() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            if (startTime && endTime) {
+                const start = new Date(`2000-01-01T${startTime}`);
+                const end = new Date(`2000-01-01T${endTime}`);
+                const duration = (end - start) / (1000 * 60); // en minutos
+                
+                if (duration > 0) {
+                    console.log(`Duración de la reunión: ${duration} minutos`);
+                }
+            }
+        }
+        
+        // Event listeners para calcular duración
+        document.getElementById('startTime').addEventListener('change', calculateDuration);
+        document.getElementById('endTime').addEventListener('change', calculateDuration);
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            updateMeetingNumber();
+            setDefaultDate();
+            loadDraft();
+        });
+    </script>
+</body>
+</html>
