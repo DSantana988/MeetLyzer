@@ -364,347 +364,601 @@
             <div id="previewContent" class="space-y-4"></div>
         </div>
     </div>
+<script>
+/* ======================= Estado e Inicialización ======================= */
+let meetingCounter = parseInt(localStorage.getItem('meetingCounter')) || 0;
 
-    <script>
-        let meetingCounter = parseInt(localStorage.getItem('meetingCounter')) || 0;
-        
-        // Inicializar número de reunión
-        function updateMeetingNumber() {
-            const nextMeeting = String(meetingCounter + 1).padStart(4, '0');
-            document.getElementById('meetingNumber').textContent = `#${nextMeeting}`;
-        }
-        
-        // Establecer fecha actual por defecto
-        function setDefaultDate() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('meetingDate').value = today;
-        }
-        
-        // Generar nombre de archivo
-        function generateFileName() {
-            meetingCounter++;
-            localStorage.setItem('meetingCounter', meetingCounter);
-            
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const meetingNum = String(meetingCounter).padStart(4, '0');
-            
-            return `Meetlyzer_${year}${month}${day}_${hours}${minutes}${seconds}_REU${meetingNum}`;
-        }
-        
-        // Generar PDF
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            
-            // Configuración
-            const margin = 20;
-            const lineHeight = 6;
-            let yPos = margin;
-            
-            // Header
-            doc.setFontSize(20);
-            doc.setTextColor(14, 165, 233);
-            doc.text('INFORME DE REUNIÓN', margin, yPos);
-            yPos += 15;
-            
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text('Meetlyzer Pro - Sistema de Gestión de Reuniones', margin, yPos);
-            yPos += 10;
-            
-            // Información del caso
-            const meetingNum = document.getElementById('meetingNumber').textContent;
-            doc.setFontSize(14);
-            doc.text(`Reunión: ${meetingNum}`, margin, yPos);
-            
-            const now = new Date().toLocaleString('es-ES');
-            doc.text(`Generado: ${now}`, 120, yPos);
-            yPos += 15;
-            
-            // Línea separadora
-            doc.setLineWidth(0.5);
-            doc.line(margin, yPos, 190, yPos);
-            yPos += 10;
-            
-            // Función para agregar sección
-            function addSection(title, content, addSpace = true) {
-                if (yPos > 250) {
-                    doc.addPage();
-                    yPos = margin;
-                }
-                
-                doc.setFontSize(14);
-                doc.setTextColor(14, 165, 233);
-                doc.text(title, margin, yPos);
-                yPos += 8;
-                
-                doc.setFontSize(10);
-                doc.setTextColor(0, 0, 0);
-                
-                if (Array.isArray(content)) {
-                    content.forEach(item => {
-                        if (yPos > 280) {
-                            doc.addPage();
-                            yPos = margin;
-                        }
-                        
-                        const lines = doc.splitTextToSize(item, 170);
-                        lines.forEach(line => {
-                            doc.text(line, margin, yPos);
-                            yPos += lineHeight;
-                        });
-                    });
-                } else {
-                    const lines = doc.splitTextToSize(content, 170);
-                    lines.forEach(line => {
-                        if (yPos > 280) {
-                            doc.addPage();
-                            yPos = margin;
-                        }
-                        doc.text(line, margin, yPos);
-                        yPos += lineHeight;
-                    });
-                }
-                if (addSpace) yPos += 8;
-            }
-            
-            // Recopilar datos del formulario
-            const formData = {
-                meetingTitle: document.getElementById('meetingTitle').value,
-                meetingType: document.getElementById('meetingType').value,
-                meetingDate: document.getElementById('meetingDate').value,
-                startTime: document.getElementById('startTime').value,
-                endTime: document.getElementById('endTime').value,
-                modality: document.getElementById('modality').value,
-                location: document.getElementById('location').value,
-                organizer: document.getElementById('organizer').value,
-                attendees: document.getElementById('attendees').value,
-                absentees: document.getElementById('absentees').value,
-                externalGuests: document.getElementById('externalGuests').value,
-                totalParticipants: document.getElementById('totalParticipants').value,
-                objectives: document.getElementById('objectives').value,
-                agenda: document.getElementById('agenda').value,
-                decisions: document.getElementById('decisions').value,
-                agreements: document.getElementById('agreements').value,
-                assignedTasks: document.getElementById('assignedTasks').value,
-                pendingItems: document.getElementById('pendingItems').value,
-                nextMeetingDate: document.getElementById('nextMeetingDate').value,
-                nextMeetingTopic: document.getElementById('nextMeetingTopic').value,
-                sharedDocuments: document.getElementById('sharedDocuments').value,
-                referenceLinks: document.getElementById('referenceLinks').value,
-                additionalNotes: document.getElementById('additionalNotes').value,
-                moderatorNotes: document.getElementById('moderatorNotes').value,
-                secretary: document.getElementById('secretary').value,
-                department: document.getElementById('department').value,
-                secretaryEmail: document.getElementById('secretaryEmail').value
-            };
-            
-            // Agregar secciones al PDF
-            addSection('INFORMACIÓN GENERAL', [
-                `Título: ${formData.meetingTitle || 'No especificado'}`,
-                `Tipo de Reunión: ${formData.meetingType || 'No especificado'}`,
-                `Fecha: ${formData.meetingDate ? new Date(formData.meetingDate).toLocaleDateString('es-ES') : 'No especificada'}`,
-                `Horario: ${formData.startTime || 'N/A'} - ${formData.endTime || 'N/A'}`,
-                `Modalidad: ${formData.modality || 'No especificada'}`,
-                `Lugar/Plataforma: ${formData.location || 'No especificado'}`,
-                `Organizador: ${formData.organizer || 'No especificado'}`
-            ]);
-            
-            addSection('PARTICIPANTES', [
-                `Total de Participantes: ${formData.totalParticipants || 'No especificado'}`,
-                `Asistentes Confirmados:\n${formData.attendees || 'No especificados'}`,
-                `Ausentes Justificados:\n${formData.absentees || 'Ninguno'}`,
-                `Invitados Externos:\n${formData.externalGuests || 'Ninguno'}`
-            ]);
-            
-            addSection('CONTENIDO Y DESARROLLO', [
-                `Objetivos de la Reunión:\n${formData.objectives || 'No especificados'}`,
-                `Agenda/Puntos Tratados:\n${formData.agenda || 'No especificada'}`,
-                `Decisiones Tomadas:\n${formData.decisions || 'Ninguna'}`,
-                `Acuerdos Alcanzados:\n${formData.agreements || 'Ninguno'}`
-            ]);
-            
-            addSection('TAREAS Y SEGUIMIENTO', [
-                `Acciones Asignadas:\n${formData.assignedTasks || 'Ninguna'}`,
-                `Puntos Pendientes:\n${formData.pendingItems || 'Ninguno'}`,
-                `Próxima Reunión: ${formData.nextMeetingDate ? new Date(formData.nextMeetingDate).toLocaleDateString('es-ES') : 'No programada'}`,
-                `Tema Próxima Reunión: ${formData.nextMeetingTopic || 'No definido'}`
-            ]);
-            
-            if (formData.sharedDocuments || formData.referenceLinks) {
-                addSection('RECURSOS Y DOCUMENTACIÓN', [
-                    `Documentos Compartidos:\n${formData.sharedDocuments || 'Ninguno'}`,
-                    `Enlaces de Referencia:\n${formData.referenceLinks || 'Ninguno'}`
-                ]);
-            }
-            
-            if (formData.additionalNotes || formData.moderatorNotes) {
-                addSection('NOTAS Y OBSERVACIONES', [
-                    `Notas Adicionales:\n${formData.additionalNotes || 'Ninguna'}`,
-                    `Observaciones del Moderador:\n${formData.moderatorNotes || 'Ninguna'}`
-                ]);
-            }
-            
-            addSection('INFORMACIÓN DEL REDACTOR', [
-                `Secretario/Redactor: ${formData.secretary || 'No especificado'}`,
-                `Departamento: ${formData.department || 'No especificado'}`,
-                `Email de Contacto: ${formData.secretaryEmail || 'No especificado'}`
-            ], false);
-            
-            // Footer en todas las páginas
-            const pageCount = doc.internal.getNumberOfPages();
-            for (let i = 1; i <= pageCount; i++) {
-                doc.setPage(i);
-                doc.setFontSize(8);
-                doc.setTextColor(128, 128, 128);
-                doc.text(`Meetlyzer Pro - Página ${i} de ${pageCount}`, margin, 285);
-                doc.text('Documento Confidencial - Uso Interno', 120, 285);
-            }
-            
-            // Descargar PDF
-            const fileName = generateFileName();
-            doc.save(`${fileName}.pdf`);
-            
-            // Mostrar confirmación
-            alert(`Informe de reunión generado exitosamente: ${fileName}.pdf`);
-            
-            // Limpiar formulario si se desea
-            if (confirm('¿Desea limpiar el formulario para una nueva reunión?')) {
-                document.getElementById('meetingForm').reset();
-                setDefaultDate();
-                updateMeetingNumber();
-            }
-        }
-        
-        // Vista previa
-        function showPreview() {
-            const previewContent = document.getElementById('previewContent');
-            
-            // Construir vista previa
-            let html = '<div class="space-y-6">';
-            
-            html += `<div class="border-b pb-4">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Información General</h3>
-                <div class="grid grid-cols-2 gap-4 text-sm">
-                    <div><strong>Título:</strong> ${document.getElementById('meetingTitle').value || 'No especificado'}</div>
-                    <div><strong>Tipo:</strong> ${document.getElementById('meetingType').value || 'No especificado'}</div>
-                    <div><strong>Fecha:</strong> ${document.getElementById('meetingDate').value ? new Date(document.getElementById('meetingDate').value).toLocaleDateString('es-ES') : 'No especificada'}</div>
-                    <div><strong>Modalidad:</strong> ${document.getElementById('modality').value || 'No especificada'}</div>
-                    <div><strong>Organizador:</strong> ${document.getElementById('organizer').value || 'No especificado'}</div>
-                    <div><strong>Participantes:</strong> ${document.getElementById('totalParticipants').value || 'No especificado'}</div>
-                </div>
-            </div>`;
-            
-            html += `<div class="border-b pb-4">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Objetivos y Agenda</h3>
-                <div class="text-sm space-y-2">
-                    <div><strong>Objetivos:</strong><br>${(document.getElementById('objectives').value || 'No especificados').replace(/\n/g, '<br>')}</div>
-                    <div><strong>Agenda:</strong><br>${(document.getElementById('agenda').value || 'No especificada').replace(/\n/g, '<br>')}</div>
-                </div>
-            </div>`;
-            
-            html += `<div class="border-b pb-4">
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Decisiones y Acuerdos</h3>
-                <div class="text-sm space-y-2">
-                    <div><strong>Decisiones:</strong><br>${(document.getElementById('decisions').value || 'Ninguna').replace(/\n/g, '<br>')}</div>
-                    <div><strong>Acuerdos:</strong><br>${(document.getElementById('agreements').value || 'Ninguno').replace(/\n/g, '<br>')}</div>
-                </div>
-            </div>`;
-            
-            html += `<div>
-                <h3 class="text-lg font-semibold text-gray-800 mb-2">Secretario</h3>
-                <div class="text-sm">
-                    <strong>${document.getElementById('secretary').value || 'No especificado'}</strong> - 
-                    ${document.getElementById('department').value || 'Departamento no especificado'}
-                </div>
-            </div>`;
-            
-            html += '</div>';
-            
-            previewContent.innerHTML = html;
-            document.getElementById('previewModal').classList.remove('hidden');
-            document.getElementById('previewModal').classList.add('flex');
-        }
-        
-        // Event Listeners
-        document.getElementById('generateBtn').addEventListener('click', function() {
-            if (confirm('¿Está seguro de que desea finalizar y generar el informe PDF?')) {
-                generatePDF();
-            }
-        });
-        
-        document.getElementById('previewBtn').addEventListener('click', showPreview);
-        
-        document.getElementById('closeModal').addEventListener('click', function() {
-            document.getElementById('previewModal').classList.add('hidden');
-            document.getElementById('previewModal').classList.remove('flex');
-        });
-        
-        document.getElementById('saveBtn').addEventListener('click', function() {
-            const formData = {};
-            const inputs = document.querySelectorAll('#meetingForm input, #meetingForm select, #meetingForm textarea');
-            inputs.forEach(input => {
-                formData[input.id] = input.value;
-            });
-            
-            localStorage.setItem('meetingDraft', JSON.stringify(formData));
-            alert('Borrador de reunión guardado exitosamente');
-        });
-        
-        // Cargar borrador si existe
-        function loadDraft() {
-            const draft = localStorage.getItem('meetingDraft');
-            if (draft && confirm('Se encontró un borrador guardado. ¿Desea cargarlo?')) {
-                const data = JSON.parse(draft);
-                Object.keys(data).forEach(key => {
-                    const element = document.getElementById(key);
-                    if (element) {
-                        element.value = data[key];
-                    }
-                });
-            }
-        }
-        
-        // Cerrar modal con Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.getElementById('previewModal').classList.add('hidden');
-                document.getElementById('previewModal').classList.remove('flex');
-            }
-        });
-        
-        // Calcular duración automáticamente
-        function calculateDuration() {
-            const startTime = document.getElementById('startTime').value;
-            const endTime = document.getElementById('endTime').value;
-            
-            if (startTime && endTime) {
-                const start = new Date(`2000-01-01T${startTime}`);
-                const end = new Date(`2000-01-01T${endTime}`);
-                const duration = (end - start) / (1000 * 60); // en minutos
-                
-                if (duration > 0) {
-                    console.log(`Duración de la reunión: ${duration} minutos`);
-                }
-            }
-        }
-        
-        // Event listeners para calcular duración
-        document.getElementById('startTime').addEventListener('change', calculateDuration);
-        document.getElementById('endTime').addEventListener('change', calculateDuration);
-        
-        // Inicialización
-        document.addEventListener('DOMContentLoaded', function() {
-            updateMeetingNumber();
-            setDefaultDate();
-            loadDraft();
-        });
-    </script>
+// Número de reunión incremental
+function updateMeetingNumber() {
+  const nextMeeting = String(meetingCounter + 1).padStart(4, '0');
+  document.getElementById('meetingNumber').textContent = `#${nextMeeting}`;
+}
+
+// Fecha por defecto = hoy
+function setDefaultDate() {
+  const today = new Date().toISOString().split('T')[0];
+  const el = document.getElementById('meetingDate');
+  if (el && !el.value) el.value = today;
+}
+
+// Nombre de archivo + contador persistido
+function generateFileName() {
+  meetingCounter++;
+  localStorage.setItem('meetingCounter', meetingCounter);
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  const meetingNum = String(meetingCounter).padStart(4, '0');
+
+  return `Meetlyzer_${year}${month}${day}_${hours}${minutes}${seconds}_REU${meetingNum}`;
+}
+
+/* ======================= Helpers de PDF/UI ======================= */
+function mm(text, doc) { return doc.getTextWidth(text); }
+
+function ensureSpace(doc, yPos, needed, marginTop = 20) {
+  if (yPos + needed > 285) { doc.addPage(); return marginTop; }
+  return yPos;
+}
+
+function drawDivider(doc, x, y, w) {
+  doc.setDrawColor(226, 232, 240);
+  doc.setLineWidth(0.5);
+  if (doc.setLineDash) doc.setLineDash([1.5, 2]);
+  doc.line(x, y, x + w, y);
+  if (doc.setLineDash) doc.setLineDash([]);
+}
+
+function drawSectionHeader(doc, title, index, x, y, w) {
+  // banda clara
+  doc.setFillColor(245, 249, 255);
+  doc.roundedRect(x, y, w, 12, 2, 2, 'F');
+
+  // chip índice
+  const chipText = String(index).padStart(2, '0');
+  doc.setFillColor(14, 165, 233);
+  doc.roundedRect(x + 3, y + 2.2, 12, 7.6, 3, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.text(chipText, x + 9, y + 7.8, { align: 'center', baseline: 'middle' });
+
+  // título
+  doc.setTextColor(37, 99, 235);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text(title, x + 19, y + 8.8);
+
+  return y + 16;
+}
+
+function drawChip(doc, x, y, label) {
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  const paddingX = 3.5, paddingY = 2.5;
+  const textW = mm(label, doc);
+  const w = textW + paddingX * 2;
+  doc.setFillColor(230, 244, 255);
+  doc.roundedRect(x, y, w, 8.5, 4, 4, 'F');
+  doc.setTextColor(14, 165, 233);
+  doc.text(label, x + paddingX, y + 6.2);
+  return w + 3;
+}
+
+function renderKeyValue(doc, x, y, key, value, maxWidth = 170) {
+  const safe = (v) => (v == null || String(v).trim() === '') ? 'No especificado' : String(v);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(55, 65, 81);
+  const keyText = key + ': ';
+  const keyW = mm(keyText, doc);
+
+  const lines = doc.splitTextToSize(safe(value), maxWidth - keyW);
+
+  doc.text(keyText, x, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(17, 24, 39);
+  doc.text(lines, x + keyW, y);
+
+  return y + (lines.length * 5.5);
+}
+
+function sanitizeList(text) {
+  if (!text) return [];
+  return text
+    .split('\n')
+    .map(t => t.trim())
+    .filter(t => t.length)
+    .map(t => t.replace(/^[-•\d.)\s]+/u, ''));
+}
+
+function renderBulletList(doc, x, y, items, maxWidth = 170) {
+  const list = items && items.length ? items : ['—'];
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(17, 24, 39);
+
+  const lineH = 5.5;
+  list.forEach(item => {
+    const lines = doc.splitTextToSize(item, maxWidth - 6);
+    // viñeta
+    doc.setFont('helvetica', 'bold');
+    doc.text('•', x, y);
+    // texto
+    doc.setFont('helvetica', 'normal');
+    lines.forEach(() => {});
+    lines.forEach((ln) => {
+      doc.text(ln, x + 6, y);
+      y += lineH;
+      if (y > 285) { doc.addPage(); y = 20; }
+    });
+  });
+  return y + 2;
+}
+
+/* ======================= Generador de PDF ======================= */
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  // Márgenes y baseline
+  const margin = 20;
+  const width = 170;
+  let y = margin;
+
+  // Header
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(14, 165, 233);
+  doc.text('INFORME DE REUNIÓN', margin, y);
+  y += 8;
+  doc.setDrawColor(14, 165, 233);
+  doc.setLineWidth(1);
+  doc.line(margin, y, 190, y);
+  y += 6;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(100, 116, 139);
+  const meetingNum = document.getElementById('meetingNumber').textContent;
+  const now = new Date().toLocaleString('es-ES');
+  doc.text('Meetlyzer Pro • Sistema de Gestión de Reuniones', margin, y);
+  doc.text(`Reunión: ${meetingNum}`, 140, y);
+  y += 6;
+  doc.text(`Generado: ${now}`, 140, y);
+  y += 8;
+
+  drawDivider(doc, margin, y, width);
+  y += 6;
+
+  // Recoger datos
+  const fd = {
+    meetingTitle: document.getElementById('meetingTitle').value,
+    meetingType: document.getElementById('meetingType').value,
+    meetingDate: document.getElementById('meetingDate').value,
+    startTime: document.getElementById('startTime').value,
+    endTime: document.getElementById('endTime').value,
+    modality: document.getElementById('modality').value,
+    location: document.getElementById('location').value,
+    organizer: document.getElementById('organizer').value,
+    attendees: document.getElementById('attendees').value,
+    absentees: document.getElementById('absentees').value,
+    externalGuests: document.getElementById('externalGuests').value,
+    totalParticipants: document.getElementById('totalParticipants').value,
+    objectives: document.getElementById('objectives').value,
+    agenda: document.getElementById('agenda').value,
+    decisions: document.getElementById('decisions').value,
+    agreements: document.getElementById('agreements').value,
+    assignedTasks: document.getElementById('assignedTasks').value,
+    pendingItems: document.getElementById('pendingItems').value,
+    nextMeetingDate: document.getElementById('nextMeetingDate').value,
+    nextMeetingTopic: document.getElementById('nextMeetingTopic').value,
+    sharedDocuments: document.getElementById('sharedDocuments').value,
+    referenceLinks: document.getElementById('referenceLinks').value,
+    additionalNotes: document.getElementById('additionalNotes').value,
+    moderatorNotes: document.getElementById('moderatorNotes').value,
+    secretary: document.getElementById('secretary').value,
+    department: document.getElementById('department').value,
+    secretaryEmail: document.getElementById('secretaryEmail').value
+  };
+
+  /* ---------- 01 Resumen ---------- */
+  y = ensureSpace(doc, y, 32);
+  y = drawSectionHeader(doc, 'RESUMEN DE LA REUNIÓN', 1, margin, y, width);
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(17,24,39);
+  doc.text(fd.meetingTitle || 'Título no especificado', margin, y);
+  y += 7;
+
+  // chips
+  let cx = margin;
+  cx += drawChip(doc, cx, y - 6, `Tipo: ${fd.meetingType || 'N/D'}`);
+  cx += drawChip(doc, cx, y - 6, `Modalidad: ${fd.modality || 'N/D'}`);
+  cx += drawChip(doc, cx, y - 6, `Participantes: ${fd.totalParticipants || 'N/D'}`);
+  y += 10;
+
+  const fechaTxt = fd.meetingDate ? new Date(fd.meetingDate).toLocaleDateString('es-ES') : 'No especificada';
+  const horarioTxt = `${fd.startTime || 'N/A'} – ${fd.endTime || 'N/A'}`;
+
+  y = renderKeyValue(doc, margin, y, 'Fecha', fechaTxt, 80);
+  y = renderKeyValue(doc, margin, y, 'Horario', horarioTxt, 80);
+
+  let yRight = y - 11;
+  yRight = renderKeyValue(doc, 120, yRight, 'Lugar/Plataforma', fd.location || 'No especificado', 70);
+  yRight = renderKeyValue(doc, 120, yRight, 'Organizador', fd.organizer || 'No especificado', 70);
+  y = Math.max(y, yRight) + 4;
+
+  drawDivider(doc, margin, y, width);
+  y += 6;
+
+  /* ---------- 02 Participantes ---------- */
+  y = ensureSpace(doc, y, 40);
+  y = drawSectionHeader(doc, 'PARTICIPANTES Y ASISTENCIA', 2, margin, y, width);
+
+  y = renderKeyValue(doc, margin, y, 'Total', fd.totalParticipants || 'No especificado', width);
+
+  const asistentes = sanitizeList(fd.attendees);
+  const ausentes   = sanitizeList(fd.absentees);
+  const externos   = sanitizeList(fd.externalGuests);
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(55,65,81);
+  doc.text('Asistentes Confirmados', margin, y); y += 5;
+  y = renderBulletList(doc, margin, y, asistentes.length ? asistentes : ['No especificados'], width);
+
+  y = ensureSpace(doc, y, 20);
+  doc.setFont('helvetica', 'bold'); doc.text('Ausentes Justificados', margin, y); y += 5;
+  y = renderBulletList(doc, margin, y, ausentes.length ? ausentes : ['Ninguno'], width);
+
+  y = ensureSpace(doc, y, 20);
+  doc.setFont('helvetica', 'bold'); doc.text('Invitados Externos', margin, y); y += 5;
+  y = renderBulletList(doc, margin, y, externos.length ? externos : ['Ninguno'], width);
+
+  /* ---------- 03 Objetivos ---------- */
+  y = ensureSpace(doc, y, 30);
+  y = drawSectionHeader(doc, 'OBJETIVOS DE LA REUNIÓN', 3, margin, y, width);
+  y = renderBulletList(doc, margin, y, sanitizeList(fd.objectives).length ? sanitizeList(fd.objectives) : ['No especificados'], width);
+
+  /* ---------- 04 Agenda ---------- */
+  y = ensureSpace(doc, y, 30);
+  y = drawSectionHeader(doc, 'AGENDA / PUNTOS TRATADOS', 4, margin, y, width);
+  y = renderBulletList(doc, margin, y, sanitizeList(fd.agenda).length ? sanitizeList(fd.agenda) : ['No especificada'], width);
+
+  /* ---------- 05 Decisiones ---------- */
+  y = ensureSpace(doc, y, 30);
+  y = drawSectionHeader(doc, 'DECISIONES TOMADAS', 5, margin, y, width);
+  y = renderBulletList(doc, margin, y, sanitizeList(fd.decisions).length ? sanitizeList(fd.decisions) : ['Ninguna'], width);
+
+  /* ---------- 06 Acuerdos ---------- */
+  y = ensureSpace(doc, y, 30);
+  y = drawSectionHeader(doc, 'ACUERDOS ALCANZADOS', 6, margin, y, width);
+  y = renderBulletList(doc, margin, y, sanitizeList(fd.agreements).length ? sanitizeList(fd.agreements) : ['Ninguno'], width);
+
+  /* ---------- 07 Acciones ---------- */
+  y = ensureSpace(doc, y, 30);
+  y = drawSectionHeader(doc, 'ACCIONES ASIGNADAS', 7, margin, y, width);
+  y = renderBulletList(doc, margin, y, sanitizeList(fd.assignedTasks).length ? sanitizeList(fd.assignedTasks) : ['Ninguna'], width);
+
+  /* ---------- 08 Pendientes ---------- */
+  y = ensureSpace(doc, y, 30);
+  y = drawSectionHeader(doc, 'PUNTOS PENDIENTES', 8, margin, y, width);
+  y = renderBulletList(doc, margin, y, sanitizeList(fd.pendingItems).length ? sanitizeList(fd.pendingItems) : ['Ninguno'], width);
+
+  /* ---------- 09 Próxima reunión ---------- */
+  y = ensureSpace(doc, y, 24);
+  y = drawSectionHeader(doc, 'PRÓXIMA REUNIÓN', 9, margin, y, width);
+  const proxFecha = fd.nextMeetingDate ? new Date(fd.nextMeetingDate).toLocaleDateString('es-ES') : 'No programada';
+  y = renderKeyValue(doc, margin, y, 'Fecha', proxFecha, width);
+  y = renderKeyValue(doc, margin, y, 'Tema', fd.nextMeetingTopic || 'No definido', width);
+
+  /* ---------- 10 Recursos (opcional) ---------- */
+  if (fd.sharedDocuments || fd.referenceLinks) {
+    y = ensureSpace(doc, y, 30);
+    y = drawSectionHeader(doc, 'RECURSOS Y DOCUMENTACIÓN', 10, margin, y, width);
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(55,65,81);
+    doc.text('Documentos Compartidos', margin, y); y += 5;
+    y = renderBulletList(doc, margin, y, sanitizeList(fd.sharedDocuments).length ? sanitizeList(fd.sharedDocuments) : ['Ninguno'], width);
+
+    y = ensureSpace(doc, y, 20);
+    doc.setFont('helvetica', 'bold'); doc.text('Enlaces de Referencia', margin, y); y += 5;
+    y = renderBulletList(doc, margin, y, sanitizeList(fd.referenceLinks).length ? sanitizeList(fd.referenceLinks) : ['Ninguno'], width);
+  }
+
+  /* ---------- 11 Notas (opcional) ---------- */
+  if (fd.additionalNotes || fd.moderatorNotes) {
+    y = ensureSpace(doc, y, 30);
+    y = drawSectionHeader(doc, 'NOTAS Y OBSERVACIONES', 11, margin, y, width);
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(55,65,81);
+    doc.text('Notas Adicionales', margin, y); y += 5;
+    y = renderBulletList(doc, margin, y, sanitizeList(fd.additionalNotes).length ? sanitizeList(fd.additionalNotes) : ['Ninguna'], width);
+
+    y = ensureSpace(doc, y, 16);
+    doc.setFont('helvetica', 'bold'); doc.text('Observaciones del Moderador', margin, y); y += 5;
+    y = renderBulletList(doc, margin, y, sanitizeList(fd.moderatorNotes).length ? sanitizeList(fd.moderatorNotes) : ['Ninguna'], width);
+  }
+
+  /* ---------- 12 Redactor ---------- */
+  y = ensureSpace(doc, y, 24);
+  y = drawSectionHeader(doc, 'INFORMACIÓN DEL REDACTOR', 12, margin, y, width);
+  y = renderKeyValue(doc, margin, y, 'Secretario/Redactor', fd.secretary || 'No especificado', width);
+  y = renderKeyValue(doc, margin, y, 'Departamento', fd.department || 'No especificado', width);
+  y = renderKeyValue(doc, margin, y, 'Email de Contacto', fd.secretaryEmail || 'No especificado', width);
+
+  // Footer
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text(`Meetlyzer Pro - Página ${i} de ${pageCount}`, margin, 285);
+    doc.text('Documento Confidencial - Uso Interno', 120, 285);
+  }
+
+  // Guardar
+  const fileName = generateFileName();
+  doc.save(`${fileName}.pdf`);
+
+  alert(`Informe de reunión generado exitosamente: ${fileName}.pdf`);
+
+  if (confirm('¿Desea limpiar el formulario para una nueva reunión?')) {
+    document.getElementById('meetingForm').reset();
+    setDefaultDate();
+    updateMeetingNumber();
+  }
+}
+
+/* ======================= Vista previa modal ======================= */
+function showPreview() {
+  const previewContent = document.getElementById('previewContent');
+  const val = (v, empty = 'No especificado') => (v && v.trim()) ? v : `<span class="text-gray-400">${empty}</span>`;
+  const dt  = v => v ? new Date(v).toLocaleDateString('es-ES') : '';
+  const toList = (txt, empty = '—') => {
+    const items = sanitizeList(txt);
+    if (!items.length) return `<div class="text-gray-400">${empty}</div>`;
+    return `<ul class="list-disc pl-6 space-y-1">${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+  };
+
+  const html = `
+  <div class="space-y-6">
+    <!-- 01 Resumen -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">01</span>
+        <h3 class="text-lg font-semibold text-blue-700">Resumen de la Reunión</h3>
+      </div>
+      <div class="mb-3">
+        <div class="text-base font-semibold text-gray-900">${val(document.getElementById('meetingTitle').value, 'Título no especificado')}</div>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">Tipo: ${val(document.getElementById('meetingType').value, 'N/D')}</span>
+          <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">Modalidad: ${val(document.getElementById('modality').value, 'N/D')}</span>
+          <span class="px-2 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold">Participantes: ${val(document.getElementById('totalParticipants').value, 'N/D')}</span>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div><span class="font-semibold text-gray-700">Fecha:</span> ${val(dt(document.getElementById('meetingDate').value), 'No especificada')}</div>
+        <div><span class="font-semibold text-gray-700">Horario:</span> ${val(`${document.getElementById('startTime').value || 'N/A'} – ${document.getElementById('endTime').value || 'N/A'}`, 'N/A')}</div>
+        <div><span class="font-semibold text-gray-700">Lugar/Plataforma:</span> ${val(document.getElementById('location').value)}</div>
+        <div><span class="font-semibold text-gray-700">Organizador:</span> ${val(document.getElementById('organizer').value)}</div>
+      </div>
+    </section>
+
+    <!-- 02 Participantes -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">02</span>
+        <h3 class="text-lg font-semibold text-blue-700">Participantes y Asistencia</h3>
+      </div>
+      <div class="text-sm mb-2"><span class="font-semibold text-gray-700">Total:</span> ${val(document.getElementById('totalParticipants').value)}</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Asistentes Confirmados</div>
+          ${toList(document.getElementById('attendees').value, 'No especificados')}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Ausentes Justificados</div>
+          ${toList(document.getElementById('absentees').value, 'Ninguno')}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Invitados Externos</div>
+          ${toList(document.getElementById('externalGuests').value, 'Ninguno')}
+        </div>
+      </div>
+    </section>
+
+    <!-- 03 Objetivos -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">03</span>
+        <h3 class="text-lg font-semibold text-blue-700">Objetivos de la Reunión</h3>
+      </div>
+      ${toList(document.getElementById('objectives').value, 'No especificados')}
+    </section>
+
+    <!-- 04 Agenda -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">04</span>
+        <h3 class="text-lg font-semibold text-blue-700">Agenda / Puntos Tratados</h3>
+      </div>
+      ${toList(document.getElementById('agenda').value, 'No especificada')}
+    </section>
+
+    <!-- 05 Decisiones y 06 Acuerdos -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">05</span>
+        <h3 class="text-lg font-semibold text-blue-700">Decisiones y Acuerdos</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Decisiones Tomadas</div>
+          ${toList(document.getElementById('decisions').value, 'Ninguna')}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Acuerdos Alcanzados</div>
+          ${toList(document.getElementById('agreements').value, 'Ninguno')}
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 Tareas y 08 Pendientes -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">06</span>
+        <h3 class="text-lg font-semibold text-blue-700">Tareas y Seguimiento</h3>
+      </div>
+      <div class="mb-3">
+        <div class="font-semibold text-gray-700 mb-1">Acciones Asignadas</div>
+        ${toList(document.getElementById('assignedTasks').value, 'Ninguna')}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Puntos Pendientes</div>
+          ${toList(document.getElementById('pendingItems').value, 'Ninguno')}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Próxima Reunión</div>
+          <div><span class="font-semibold">Fecha:</span> ${document.getElementById('nextMeetingDate').value ? new Date(document.getElementById('nextMeetingDate').value).toLocaleDateString('es-ES') : '<span class="text-gray-400">No programada</span>'}</div>
+          <div><span class="font-semibold">Tema:</span> ${val(document.getElementById('nextMeetingTopic').value, 'No definido')}</div>
+        </div>
+      </div>
+    </section>
+
+    ${ (document.getElementById('sharedDocuments').value || document.getElementById('referenceLinks').value) ? `
+    <!-- 07 Recursos -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">07</span>
+        <h3 class="text-lg font-semibold text-blue-700">Recursos y Documentación</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Documentos Compartidos</div>
+          ${toList(document.getElementById('sharedDocuments').value, 'Ninguno')}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Enlaces de Referencia</div>
+          ${toList(document.getElementById('referenceLinks').value, 'Ninguno')}
+        </div>
+      </div>
+    </section>` : ''}
+
+    ${ (document.getElementById('additionalNotes').value || document.getElementById('moderatorNotes').value) ? `
+    <!-- 08 Notas -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">08</span>
+        <h3 class="text-lg font-semibold text-blue-700">Notas y Observaciones</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Notas Adicionales</div>
+          ${toList(document.getElementById('additionalNotes').value, 'Ninguna')}
+        </div>
+        <div>
+          <div class="font-semibold text-gray-700 mb-1">Observaciones del Moderador</div>
+          ${toList(document.getElementById('moderatorNotes').value, 'Ninguna')}
+        </div>
+      </div>
+    </section>` : ''}
+
+    <!-- 09 Redactor -->
+    <section class="border rounded-xl p-4 bg-white shadow-sm">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-600 text-white text-xs font-bold">09</span>
+        <h3 class="text-lg font-semibold text-blue-700">Información del Redactor</h3>
+      </div>
+      <div class="text-sm">
+        <div><span class="font-semibold text-gray-700">Secretario/Redactor:</span> ${val(document.getElementById('secretary').value)}</div>
+        <div><span class="font-semibold text-gray-700">Departamento:</span> ${val(document.getElementById('department').value)}</div>
+        <div><span class="font-semibold text-gray-700">Email:</span> ${val(document.getElementById('secretaryEmail').value)}</div>
+      </div>
+    </section>
+  </div>
+  `;
+
+  previewContent.innerHTML = html;
+  const modal = document.getElementById('previewModal');
+  modal.classList.remove('hidden');
+  modal.classList.add('flex');
+}
+
+/* ======================= Borrador y utilidades ======================= */
+function saveDraft() {
+  const data = {};
+  const inputs = document.querySelectorAll('#meetingForm input, #meetingForm select, #meetingForm textarea');
+  inputs.forEach(el => { data[el.id] = el.value; });
+  localStorage.setItem('meetingDraft', JSON.stringify(data));
+  alert('Borrador de reunión guardado exitosamente');
+}
+
+function loadDraft() {
+  const draft = localStorage.getItem('meetingDraft');
+  if (!draft) return;
+  if (confirm('Se encontró un borrador guardado. ¿Desea cargarlo?')) {
+    const data = JSON.parse(draft);
+    Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el) el.value = data[key]; });
+  }
+}
+
+// Duración (opcional en consola)
+function calculateDuration() {
+  const startTime = document.getElementById('startTime').value;
+  const endTime = document.getElementById('endTime').value;
+  if (startTime && endTime) {
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end   = new Date(`2000-01-01T${endTime}`);
+    const minutes = (end - start) / 60000;
+    if (minutes > 0) console.log(`Duración de la reunión: ${minutes} minutos`);
+  }
+}
+
+/* ======================= Listeners ======================= */
+document.addEventListener('DOMContentLoaded', function () {
+  updateMeetingNumber();
+  setDefaultDate();
+  loadDraft();
+
+  // Botones
+  document.getElementById('generateBtn').addEventListener('click', function () {
+    if (confirm('¿Está seguro de que desea finalizar y generar el informe PDF?')) {
+      generatePDF();
+      // Actualizamos número mostrado para la siguiente reunión
+      updateMeetingNumber();
+    }
+  });
+
+  document.getElementById('previewBtn').addEventListener('click', showPreview);
+  document.getElementById('saveBtn').addEventListener('click', saveDraft);
+
+  // Cerrar modal
+  document.getElementById('closeModal').addEventListener('click', function () {
+    const modal = document.getElementById('previewModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  });
+
+  // Escape para cerrar modal
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('previewModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  });
+
+  // Duración
+  document.getElementById('startTime').addEventListener('change', calculateDuration);
+  document.getElementById('endTime').addEventListener('change', calculateDuration);
+});
+</script>
+
+
 </body>
 </html>
