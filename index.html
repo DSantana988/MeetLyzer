@@ -527,7 +527,7 @@ function generatePDF() {
   doc.setTextColor(100, 116, 139);
   const meetingNum = document.getElementById('meetingNumber').textContent;
   const now = new Date().toLocaleString('es-ES');
-  doc.text('Meetlyzer Pro • Sistema de Gestión de Reuniones', margin, y);
+  doc.text('Meetlyzer', margin, y);
   doc.text(`Reunión: ${meetingNum}`, 140, y);
   y += 6;
   doc.text(`Generado: ${now}`, 140, y);
@@ -696,7 +696,7 @@ function generatePDF() {
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(128, 128, 128);
-    doc.text(`Meetlyzer Pro - Página ${i} de ${pageCount}`, margin, 285);
+    doc.text(`Meetlyzer- Página ${i} de ${pageCount}`, margin, 285);
     doc.text('Documento Confidencial - Uso Interno', 120, 285);
   }
 
